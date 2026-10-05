@@ -2,8 +2,11 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import dynamic from "next/dynamic";
-import { useRouter } from "next/navigation";
-import { GitCompareArrows, Leaf, Loader2, LogOut, Map as MapIcon, Plus, X } from "lucide-react";
+import { GitCompareArrows, Leaf, Loader2, LogIn, LogOut, Map as MapIcon, Plus, UserPlus, X } from "lucide-react";
+
+import type { AuthMode } from "@/components/auth/AuthForm";
+import ThemeToggle from "@/components/ui/ThemeToggle";
+import AuthPrompt from "@/components/auth/AuthPrompt";
 
 import CompareView, { type CompareEntry } from "@/components/compare/CompareView";
 import Hero from "@/components/dashboard/Hero";
@@ -11,8 +14,9 @@ import VillageCarbon from "@/components/dashboard/VillageCarbon";
 import VillagePanel from "@/components/dashboard/VillagePanel";
 import VillageSearch from "@/components/dashboard/VillageSearch";
 import type { MapVillage } from "@/components/map/VillageMap";
-import { MAX_COMPARE, VILLAGE_COLORS } from "@/constants/theme";
+import { MAX_COMPARE } from "@/constants/theme";
 import { useAuth } from "@/contexts/AuthContext";
+import { useChartColors } from "@/contexts/ThemeContext";
 import type { CarbonSummary, EmissionFactor, VillageBoundary, VillageDetail, VillageSummary } from "@/interface/types";
 import { ApiError, api } from "@/services/api";
 
@@ -23,6 +27,9 @@ const VillageMap = dynamic(() => import("@/components/map/VillageMap"), {
 
 type Mode = "explore" | "compare";
 
+const PROMPT_SEEN_KEY = "vcd_signin_prompt_seen";
+const PROMPT_AFTER_MS = 40_000;
+
 interface Loaded {
   detail: VillageDetail;
   boundary: VillageBoundary | null; // null = village has no polygon in GeoServer
@@ -30,7 +37,7 @@ interface Loaded {
 
 export default function DashboardPage() {
   const { user, loading: authLoading, logout } = useAuth();
-  const router = useRouter();
+  const [prompt, setPrompt] = useState<{ open: boolean; mode: AuthMode }>({ open: false, mode: "signin" });
 
   const [mode, setMode] = useState<Mode>("explore");
   const [summary, setSummary] = useState<CarbonSummary | null>(null);
@@ -45,12 +52,40 @@ export default function DashboardPage() {
   const [notice, setNotice] = useState<string | null>(null);
 
   const [selected, setSelected] = useState<string | null>(null);
-  // Each compared village keeps the color slot it was given, so removing one never repaints the others
-  const [compare, setCompare] = useState<{ vlcode: string; color: string }[]>([]);
+  // Each compared village keeps the color slot it was given, so removing one never repaints the others;
+  // the slot's color comes from the active theme
+  const [compareSlots, setCompare] = useState<{ vlcode: string; slot: number }[]>([]);
+  const { villages: slotColors } = useChartColors();
+  const compare = useMemo(() => compareSlots.map((c) => ({ ...c, color: slotColors[c.slot] })), [compareSlots, slotColors]);
 
+  // Signing in is optional: ask once per visit, midway (half-way down the page or after 40 s)
   useEffect(() => {
-    if (!authLoading && !user) router.replace("/login");
-  }, [authLoading, user, router]);
+    if (authLoading || user) return;
+    const seen = () => {
+      try { return sessionStorage.getItem(PROMPT_SEEN_KEY) === "1"; } catch { return false; }
+    };
+    if (seen()) return;
+    const show = () => {
+      if (seen()) return;
+      try { sessionStorage.setItem(PROMPT_SEEN_KEY, "1"); } catch {}
+      setPrompt({ open: true, mode: "signin" });
+      cleanup();
+    };
+    const onScroll = () => {
+      const max = document.documentElement.scrollHeight - window.innerHeight;
+      if (max > 0 && window.scrollY / max >= 0.5) show();
+    };
+    const timer = setTimeout(show, PROMPT_AFTER_MS);
+    window.addEventListener("scroll", onScroll, { passive: true });
+    const cleanup = () => {
+      clearTimeout(timer);
+      window.removeEventListener("scroll", onScroll);
+    };
+    return cleanup;
+  }, [authLoading, user]);
+
+  const openAuth = (mode: AuthMode) => setPrompt({ open: true, mode });
+  const closeAuth = useCallback(() => setPrompt((p) => ({ ...p, open: false })), []);
 
   const load = useCallback(async (vlcode: string): Promise<Loaded> => {
     const hit = cache.current.get(vlcode);
@@ -68,9 +103,8 @@ export default function DashboardPage() {
     return entry;
   }, []);
 
-  // Study-area numbers + markers for the villages that have carbon data
+  // Study-area numbers + markers for the villages that have carbon data (public, no sign-in needed)
   useEffect(() => {
-    if (!user) return;
     api.summary().then(setSummary).catch(() => {});
     api.emissionFactors().then(setFactors).catch(() => {});
     api.villages({ has_carbon: true, limit: 50 }).then(async (page) => {
@@ -80,7 +114,7 @@ export default function DashboardPage() {
       );
       setAssessed(withBoundary.filter((x): x is NonNullable<typeof x> => x !== null));
     }).catch(() => {});
-  }, [user]);
+  }, []);
 
   const flash = (msg: string) => {
     setNotice(msg);
@@ -110,8 +144,8 @@ export default function DashboardPage() {
       await load(vlcode);
       setCompare((c) => {
         if (c.some((x) => x.vlcode === vlcode) || c.length >= MAX_COMPARE) return c;
-        const free = VILLAGE_COLORS.find((col) => !c.some((x) => x.color === col))!;
-        return [...c, { vlcode, color: free }];
+        const free = [0, 1, 2, 3].find((slot) => !c.some((x) => x.slot === slot))!;
+        return [...c, { vlcode, slot: free }];
       });
     } catch (e) {
       flash(e instanceof Error ? e.message : "Could not load village");
@@ -146,7 +180,7 @@ export default function DashboardPage() {
     setBusy(true);
     try {
       await Promise.all(codes.map(load));
-      setCompare(codes.map((vlcode, i) => ({ vlcode, color: VILLAGE_COLORS[i] })));
+      setCompare(codes.map((vlcode, slot) => ({ vlcode, slot })));
     } finally {
       setBusy(false);
     }
@@ -169,17 +203,13 @@ export default function DashboardPage() {
     return l ? [{ village: l.detail, census: l.boundary?.properties ?? null, color: c.color }] : [];
   });
 
-  if (authLoading || !user) {
-    return (
-      <div className="grid min-h-screen place-items-center text-muted">
-        <Loader2 className="h-6 w-6 animate-spin" />
-      </div>
-    );
-  }
-
   return (
     <div className="min-h-screen">
-      <TopBar mode={mode} onMode={switchMode} user={user.full_name ?? user.username} onLogout={logout} />
+      <TopBar
+        mode={mode} onMode={switchMode} authLoading={authLoading}
+        user={user ? user.full_name ?? user.username : null} onLogout={logout} onAuth={openAuth}
+      />
+      <AuthPrompt open={prompt.open} mode={prompt.mode} onClose={closeAuth} />
 
       <main className="mx-auto max-w-[1480px] space-y-6 px-4 pb-16 pt-6 sm:px-6">
         {mode === "explore" && <Hero summary={summary} />}
@@ -193,19 +223,19 @@ export default function DashboardPage() {
               </div>
               <button
                 onClick={compareAllAssessed}
-                className="ml-auto flex items-center gap-1.5 rounded-xl border border-emerald-300/30 bg-emerald-400/10 px-3 py-2 text-sm font-medium text-emerald-200 hover:bg-emerald-400/15"
+                className="ml-auto flex items-center gap-1.5 rounded-xl border border-accent-line bg-accent-soft px-3 py-2 text-sm font-medium text-accent hover:brightness-110"
               >
                 <Leaf className="h-4 w-4" /> Compare all assessed villages
               </button>
             </div>
             <div className="mt-4 flex flex-wrap items-center gap-2">
               {compare.map((c) => (
-                <span key={c.vlcode} className="flex items-center gap-2 rounded-full border border-line bg-white/[0.04] py-1 pl-3 pr-1 text-sm text-ink">
+                <span key={c.vlcode} className="flex items-center gap-2 rounded-full border border-line bg-surface-2 py-1 pl-3 pr-1 text-sm text-ink">
                   <span className="h-2.5 w-2.5 rounded-full" style={{ background: c.color }} />
                   {loaded[c.vlcode]?.detail.name ?? c.vlcode}
                   <button
                     onClick={() => setCompare((cs) => cs.filter((x) => x.vlcode !== c.vlcode))}
-                    className="rounded-full p-1 text-muted hover:bg-white/10 hover:text-ink" aria-label="Remove"
+                    className="rounded-full p-1 text-muted hover:bg-hover hover:text-ink" aria-label="Remove"
                   >
                     <X className="h-3.5 w-3.5" />
                   </button>
@@ -230,7 +260,7 @@ export default function DashboardPage() {
               />
             </div>
             {(busy || notice) && (
-              <div className="glass absolute bottom-4 left-1/2 z-[500] flex -translate-x-1/2 items-center gap-2 rounded-full px-4 py-2 text-sm text-ink">
+              <div className="glass theme-dark absolute bottom-4 left-1/2 z-[500] flex -translate-x-1/2 items-center gap-2 rounded-full px-4 py-2 text-sm text-ink">
                 {busy && <Loader2 className="h-4 w-4 animate-spin" />}
                 {notice ?? "Loading village…"}
               </div>
@@ -269,9 +299,16 @@ export default function DashboardPage() {
   );
 }
 
-function TopBar({ mode, onMode, user, onLogout }: { mode: Mode; onMode: (m: Mode) => void; user: string; onLogout: () => void }) {
+function TopBar({ mode, onMode, user, authLoading, onLogout, onAuth }: {
+  mode: Mode;
+  onMode: (m: Mode) => void;
+  user: string | null;
+  authLoading: boolean;
+  onLogout: () => void;
+  onAuth: (mode: AuthMode) => void;
+}) {
   return (
-    <header className="sticky top-0 z-[1100] border-b border-white/8 bg-[#050d09]/80 backdrop-blur-xl">
+    <header className="sticky top-0 z-[1100] border-b border-line bg-topbar backdrop-blur-xl">
       <div className="mx-auto flex h-16 max-w-[1480px] items-center gap-4 px-4 sm:px-6">
         <div className="flex items-center gap-2.5">
           <div className="grid h-9 w-9 place-items-center rounded-xl bg-gradient-to-br from-emerald-400 to-lime-500 shadow-lg shadow-emerald-500/20">
@@ -283,22 +320,36 @@ function TopBar({ mode, onMode, user, onLogout }: { mode: Mode; onMode: (m: Mode
           </div>
         </div>
 
-        <nav className="mx-auto flex rounded-xl border border-line bg-white/[0.03] p-1 text-sm">
+        <nav className="mx-auto flex rounded-xl border border-line bg-surface-2 p-1 text-sm">
           {([["explore", "Explore", MapIcon], ["compare", "Compare", GitCompareArrows]] as const).map(([m, label, Icon]) => (
             <button
               key={m} onClick={() => onMode(m)} aria-pressed={mode === m}
-              className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 transition ${mode === m ? "bg-emerald-400/15 text-emerald-200" : "text-muted hover:text-ink"}`}
+              className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 transition ${mode === m ? "bg-accent-soft text-accent" : "text-muted hover:text-ink"}`}
             >
               <Icon className="h-4 w-4" /> {label}
             </button>
           ))}
         </nav>
 
-        <div className="flex items-center gap-2">
-          <span className="hidden text-sm text-ink-2 md:inline">{user}</span>
-          <button onClick={onLogout} className="flex items-center gap-1.5 rounded-lg border border-line px-2.5 py-1.5 text-sm text-ink-2 hover:bg-white/5 hover:text-ink">
-            <LogOut className="h-4 w-4" /> <span className="hidden sm:inline">Sign out</span>
-          </button>
+        <div className="flex min-w-[88px] items-center justify-end gap-2">
+          <ThemeToggle />
+          {authLoading ? null : user ? (
+            <>
+              <span className="hidden text-sm text-ink-2 md:inline">{user}</span>
+              <button onClick={onLogout} className="flex items-center gap-1.5 rounded-lg border border-line px-2.5 py-1.5 text-sm text-ink-2 hover:bg-hover hover:text-ink">
+                <LogOut className="h-4 w-4" /> <span className="hidden sm:inline">Sign out</span>
+              </button>
+            </>
+          ) : (
+            <>
+              <button onClick={() => onAuth("signin")} className="flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-sm text-ink-2 hover:bg-hover hover:text-ink">
+                <LogIn className="h-4 w-4" /> <span className="hidden sm:inline">Sign in</span>
+              </button>
+              <button onClick={() => onAuth("signup")} className="flex items-center gap-1.5 rounded-lg bg-emerald-400 px-3 py-1.5 text-sm font-semibold text-emerald-950 hover:bg-emerald-300">
+                <UserPlus className="h-4 w-4" /> <span className="hidden sm:inline">Sign up</span>
+              </button>
+            </>
+          )}
         </div>
       </div>
     </header>

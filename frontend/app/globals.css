@@ -1,47 +1,170 @@
 @import "tailwindcss";
 
-@theme {
-  --color-bg: #050d09;
-  --color-surface: #0f1c15;
-  --color-surface-2: #14261c;
-  --color-line: rgba(255, 255, 255, 0.08);
-  --color-ink: #eef5f0;
-  --color-ink-2: #b3c4b9;
-  --color-muted: #7d9185;
-  --color-leaf: #34d399;
-  --color-leaf-deep: #065f46;
-  --color-good: #0ca30c;
-  --color-critical: #d03b3b;
-  --font-sans: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-}
+/* Light and dark themes.
+   - Light is the base; dark applies when the OS prefers it (unless the user picked light),
+     or when the user picked dark ([data-theme] is set by the toggle).
+   - .theme-dark forces dark tokens on a subtree (text over dark photos, e.g. the hero). */
 
 :root {
+  color-scheme: light;
+  --bg: #f2f6f2;
+  --surface: #ffffff;
+  --surface-2: #f5f9f5;
+  --line: rgba(15, 40, 25, 0.10);
+  --ink: #0f1f16;
+  --ink-2: #3f5547;
+  --muted: #66796c;
+  --accent: #047857;
+  --accent-soft: rgba(16, 185, 129, 0.12);
+  --accent-line: rgba(4, 120, 87, 0.30);
+  --good-text: #15803d;
+  --bad-text: #b91c1c;
+  --warn-text: #92400e;
+  --warn-soft: rgba(245, 158, 11, 0.10);
+  --warn-line: rgba(217, 119, 6, 0.35);
+  --danger-text: #991b1b;
+  --danger-soft: rgba(239, 68, 68, 0.08);
+  --danger-line: rgba(220, 38, 38, 0.30);
+  --popover: rgba(255, 255, 255, 0.97);
+  --input: #ffffff;
+  --input-line: rgba(15, 40, 25, 0.18);
+  --hover: rgba(15, 40, 25, 0.05);
+  --topbar: rgba(242, 246, 242, 0.82);
+  --card-from: rgba(255, 255, 255, 0.96);
+  --card-to: rgba(250, 253, 250, 0.96);
+  --card-shadow: 0 1px 0 rgba(255, 255, 255, 0.6) inset, 0 16px 36px -24px rgba(15, 40, 25, 0.35);
+  --scroll-thumb: #b9cbbd;
+  --glow-1: rgba(16, 185, 129, 0.10);
+  --glow-2: rgba(132, 204, 22, 0.08);
+  --map-bg: #dfe7df;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --bg: #050d09;
+    --surface: #0f1c15;
+    --surface-2: #14261c;
+    --line: rgba(255, 255, 255, 0.08);
+    --ink: #eef5f0;
+    --ink-2: #b3c4b9;
+    --muted: #7d9185;
+    --accent: #6ee7b7;
+    --accent-soft: rgba(52, 211, 153, 0.12);
+    --accent-line: rgba(110, 231, 183, 0.30);
+    --good-text: #4ade80;
+    --bad-text: #f87171;
+    --warn-text: #fde68a;
+    --warn-soft: rgba(251, 191, 36, 0.06);
+    --warn-line: rgba(251, 191, 36, 0.25);
+    --danger-text: #fecaca;
+    --danger-soft: rgba(239, 68, 68, 0.10);
+    --danger-line: rgba(248, 113, 113, 0.30);
+    --popover: rgba(7, 19, 13, 0.97);
+    --input: rgba(0, 0, 0, 0.30);
+    --input-line: rgba(255, 255, 255, 0.15);
+    --hover: rgba(255, 255, 255, 0.05);
+    --topbar: rgba(5, 13, 9, 0.80);
+    --card-from: rgba(20, 38, 28, 0.92);
+    --card-to: rgba(15, 28, 21, 0.92);
+    --card-shadow: 0 1px 0 rgba(255, 255, 255, 0.04) inset, 0 20px 40px -24px rgba(0, 0, 0, 0.7);
+    --scroll-thumb: #24402f;
+    --glow-1: rgba(16, 185, 129, 0.10);
+    --glow-2: rgba(132, 204, 22, 0.06);
+    --map-bg: #0b1610;
+  }
+}
+
+:root[data-theme="dark"],
+.theme-dark {
   color-scheme: dark;
+  --bg: #050d09;
+  --surface: #0f1c15;
+  --surface-2: #14261c;
+  --line: rgba(255, 255, 255, 0.08);
+  --ink: #eef5f0;
+  --ink-2: #b3c4b9;
+  --muted: #7d9185;
+  --accent: #6ee7b7;
+  --accent-soft: rgba(52, 211, 153, 0.12);
+  --accent-line: rgba(110, 231, 183, 0.30);
+  --good-text: #4ade80;
+  --bad-text: #f87171;
+  --warn-text: #fde68a;
+  --warn-soft: rgba(251, 191, 36, 0.06);
+  --warn-line: rgba(251, 191, 36, 0.25);
+  --danger-text: #fecaca;
+  --danger-soft: rgba(239, 68, 68, 0.10);
+  --danger-line: rgba(248, 113, 113, 0.30);
+  --popover: rgba(7, 19, 13, 0.97);
+  --input: rgba(0, 0, 0, 0.30);
+  --input-line: rgba(255, 255, 255, 0.15);
+  --hover: rgba(255, 255, 255, 0.05);
+  --topbar: rgba(5, 13, 9, 0.80);
+  --card-from: rgba(20, 38, 28, 0.92);
+  --card-to: rgba(15, 28, 21, 0.92);
+  --card-shadow: 0 1px 0 rgba(255, 255, 255, 0.04) inset, 0 20px 40px -24px rgba(0, 0, 0, 0.7);
+  --scroll-thumb: #24402f;
+  --glow-1: rgba(16, 185, 129, 0.10);
+  --glow-2: rgba(132, 204, 22, 0.06);
+  --map-bg: #0b1610;
+}
+
+/* `inline` so utilities read the variables where they are used (lets .theme-dark subtrees work) */
+@theme inline {
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-line: var(--line);
+  --color-ink: var(--ink);
+  --color-ink-2: var(--ink-2);
+  --color-muted: var(--muted);
+  --color-accent: var(--accent);
+  --color-accent-soft: var(--accent-soft);
+  --color-accent-line: var(--accent-line);
+  --color-good-text: var(--good-text);
+  --color-bad-text: var(--bad-text);
+  --color-warn-text: var(--warn-text);
+  --color-warn-soft: var(--warn-soft);
+  --color-warn-line: var(--warn-line);
+  --color-danger-text: var(--danger-text);
+  --color-danger-soft: var(--danger-soft);
+  --color-danger-line: var(--danger-line);
+  --color-popover: var(--popover);
+  --color-input: var(--input);
+  --color-input-line: var(--input-line);
+  --color-hover: var(--hover);
+  --color-topbar: var(--topbar);
+}
+
+@theme {
+  --font-sans: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
 }
 
 html,
 body {
-  background: var(--color-bg);
-  color: var(--color-ink);
+  background: var(--bg);
+  color: var(--ink);
   font-family: var(--font-sans);
 }
 
 /* Soft forest glow behind the whole app */
 body {
   background:
-    radial-gradient(1200px 600px at 10% -10%, rgba(16, 185, 129, 0.10), transparent 60%),
-    radial-gradient(900px 500px at 100% 0%, rgba(132, 204, 22, 0.06), transparent 60%),
-    var(--color-bg);
+    radial-gradient(1200px 600px at 10% -10%, var(--glow-1), transparent 60%),
+    radial-gradient(900px 500px at 100% 0%, var(--glow-2), transparent 60%),
+    var(--bg);
   min-height: 100vh;
 }
 
 .card {
-  background: linear-gradient(180deg, rgba(20, 38, 28, 0.92), rgba(15, 28, 21, 0.92));
-  border: 1px solid var(--color-line);
+  background: linear-gradient(180deg, var(--card-from), var(--card-to));
+  border: 1px solid var(--line);
   border-radius: 18px;
-  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.04) inset, 0 20px 40px -24px rgba(0, 0, 0, 0.7);
+  box-shadow: var(--card-shadow);
 }
 
+/* Frosted panel over photos (always dark: it sits on dark photo overlays) */
 .glass {
   background: rgba(8, 20, 14, 0.55);
   backdrop-filter: blur(14px) saturate(140%);
@@ -56,32 +179,36 @@ body {
 /* Scrollbars */
 * {
   scrollbar-width: thin;
-  scrollbar-color: #24402f transparent;
+  scrollbar-color: var(--scroll-thumb) transparent;
 }
 
-/* Leaflet: match the dark theme */
+/* Leaflet: follow the theme */
 .leaflet-container {
-  background: #0b1610;
+  background: var(--map-bg);
   font-family: var(--font-sans);
 }
 .leaflet-control-zoom a,
 .leaflet-control-layers {
-  background: rgba(8, 20, 14, 0.85) !important;
-  color: var(--color-ink) !important;
-  border-color: rgba(255, 255, 255, 0.12) !important;
+  background: var(--popover) !important;
+  color: var(--ink) !important;
+  border-color: var(--line) !important;
+}
+.leaflet-control-zoom a:hover {
+  background: var(--surface-2) !important;
 }
 .leaflet-control-layers-expanded {
-  color: var(--color-ink);
+  color: var(--ink);
   border-radius: 12px !important;
   padding: 8px 12px !important;
 }
 .leaflet-control-attribution {
-  background: rgba(5, 13, 9, 0.7) !important;
-  color: #7d9185 !important;
+  background: var(--popover) !important;
+  color: var(--muted) !important;
 }
 .leaflet-control-attribution a {
-  color: #b3c4b9 !important;
+  color: var(--ink-2) !important;
 }
+/* Village labels sit on satellite imagery, so they stay dark in both themes */
 .leaflet-tooltip.village-label {
   background: rgba(5, 13, 9, 0.85);
   color: #eef5f0;

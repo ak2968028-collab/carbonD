@@ -38,7 +38,7 @@ export default function ChartCard({ title, subtitle, photo, legend, table, class
         {table && (
           <button
             onClick={() => setShowTable((s) => !s)}
-            className="flex items-center gap-1.5 rounded-lg border border-line px-2.5 py-1.5 text-xs text-ink-2 hover:bg-white/5"
+            className="flex items-center gap-1.5 rounded-lg border border-line px-2.5 py-1.5 text-xs text-ink-2 hover:bg-hover"
             aria-pressed={showTable}
           >
             {showTable ? <BarChart3 className="h-3.5 w-3.5" /> : <Table2 className="h-3.5 w-3.5" />}

@@ -7,7 +7,7 @@ import { compact, num, pct, tonnes } from "@/lib/format";
 /** Photo banner with the one hero figure for the study area and its supporting tiles. */
 export default function Hero({ summary }: { summary: CarbonSummary | null }) {
   return (
-    <section className="relative overflow-hidden rounded-3xl border border-white/10">
+    <section className="theme-dark relative overflow-hidden rounded-3xl border border-white/10">
       <Image src="/images/hero-tree.webp" alt="" fill priority className="object-cover" sizes="100vw" />
       <div className="absolute inset-0 bg-gradient-to-r from-[#04110a] via-[#04110a]/85 to-[#04110a]/30" />
       <div className="absolute inset-0 bg-gradient-to-t from-[#04110a] via-transparent to-transparent" />

@@ -9,7 +9,9 @@ GEOSERVER_USERNAME=admin
 GEOSERVER_PASSWORD=geoserver
 GEOSERVER_WORKSPACE=dashboard
 
-CORS_ORIGINS=http://localhost:3000,http://127.0.0.1:3000,http://localhost:3200
+CORS_ORIGINS=http://localhost:3000,http://127.0.0.1:3000,http://localhost:3200,https://carbon-d.vercel.app
+# Optional: extra origins by regex, e.g. Vercel preview deployments
+# CORS_ORIGIN_REGEX=^https://carbon-d-[a-z0-9-]+\.vercel\.app$
 
 # Auth (generate your own: python -c "import secrets;print(secrets.token_urlsafe(48))")
 JWT_SECRET_KEY=change-me

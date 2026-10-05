@@ -1,31 +1,40 @@
 """Publish the shapefile ZIPs in media/geoserver/shp_zip to GeoServer and style them.
 
-Run inside the backend container:
+From the host:
+    python backend/script/push_to_geoserver.py
+or inside the backend container:
     docker compose exec backend python script/push_to_geoserver.py
 """
+import sys
 from pathlib import Path
 
 import requests
 
-from app.conf.settings import Settings
+# Make `media.config` importable however the script is started
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-settings = Settings()
+from media.config import (  # noqa: E402
+    GEOSERVER_BASIN_LAYER,
+    GEOSERVER_PASSWORD,
+    GEOSERVER_USER,
+    GEOSERVER_VILLAGE_LAYER,
+    GEOSERVER_WORKSPACE,
+    MEDIA_DIR,
+    geoserver_url,
+)
 
-# GeoServer config
-GEOSERVER_URL = f"{settings.GEOSERVER_URL}/rest"
-GEOSERVER_USER = settings.GEOSERVER_USERNAME
-GEOSERVER_PASSWORD = settings.GEOSERVER_PASSWORD
-WORKSPACE = settings.GEOSERVER_WORKSPACE
-BASE_DIR = settings.BASE_DIR
+# GeoServer config (host: localhost:<GEOSERVER_PORT>, container: geoserver:8080)
+GEOSERVER_URL = f"{geoserver_url()}/rest"
+WORKSPACE = GEOSERVER_WORKSPACE
 AUTH = (GEOSERVER_USER, GEOSERVER_PASSWORD)
 
 # Directory containing all shapefile ZIPs
-ZIP_DIR = Path(BASE_DIR, "media", "geoserver", "shp_zip")
+ZIP_DIR = MEDIA_DIR / "geoserver" / "shp_zip"
 
 # Layer name (= .shp name inside the zip) -> style applied to it
 LAYER_STYLES = {
-    settings.GEOSERVER_VILLAGE_LAYER: "village_outline",
-    settings.GEOSERVER_BASIN_LAYER: "basin_outline",
+    GEOSERVER_VILLAGE_LAYER: "village_outline",
+    GEOSERVER_BASIN_LAYER: "basin_outline",
 }
 
 STYLES = {
@@ -126,6 +135,7 @@ def set_default_style(layer, style):
 
 
 if __name__ == "__main__":
+    print(f"[*] GeoServer: {GEOSERVER_URL}")
     create_workspace()
 
     if not ZIP_DIR.exists():

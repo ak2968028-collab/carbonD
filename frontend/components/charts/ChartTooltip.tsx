@@ -13,7 +13,7 @@ export default function ChartTooltip({
   if (!active || !payload?.length) return null;
   const title = labelFormat ? labelFormat(label ?? "", payload[0]?.payload) : label;
   return (
-    <div className="rounded-xl border border-white/10 bg-[#07130d]/95 px-3 py-2 text-xs shadow-xl backdrop-blur">
+    <div className="rounded-xl border border-line bg-popover px-3 py-2 text-xs shadow-xl backdrop-blur">
       {title !== undefined && title !== "" && <p className="mb-1.5 font-semibold text-ink">{title}</p>}
       <ul className="space-y-1">
         {payload.map((p) => (

@@ -6,6 +6,7 @@ import GroupedBarChart from "@/components/charts/GroupedBarChart";
 import ScenarioChart from "@/components/charts/ScenarioChart";
 import ChartCard, { Legend } from "@/components/ui/ChartCard";
 import { SCENARIOS } from "@/constants/theme";
+import { useChartColors } from "@/contexts/ThemeContext";
 import type { CensusProperties, VillageDetail } from "@/interface/types";
 import { num, pct, tonnes } from "@/lib/format";
 
@@ -16,6 +17,7 @@ export interface CompareEntry {
 }
 
 export default function CompareView({ entries }: { entries: CompareEntry[] }) {
+  const c = useChartColors();
   const [scenario, setScenario] = useState("BAU");
   const carbon = entries.filter((e) => e.village.has_carbon_data);
   const withoutCarbon = entries.filter((e) => !e.village.has_carbon_data);
@@ -61,7 +63,7 @@ export default function CompareView({ entries }: { entries: CompareEntry[] }) {
       <MetricsTable entries={entries} />
 
       {withoutCarbon.length > 0 && (
-        <p className="rounded-xl border border-line bg-white/[0.03] px-4 py-3 text-sm text-ink-2">
+        <p className="rounded-xl border border-line bg-surface-2 px-4 py-3 text-sm text-ink-2">
           {withoutCarbon.map((e) => e.village.name).join(", ")} {withoutCarbon.length === 1 ? "has" : "have"} no carbon
           assessment, so {withoutCarbon.length === 1 ? "it is" : "they are"} shown in the table and on the map only.
         </p>
@@ -85,7 +87,7 @@ export default function CompareView({ entries }: { entries: CompareEntry[] }) {
                   {Object.entries(SCENARIOS).map(([k, s]) => (
                     <button
                       key={k} onClick={() => setScenario(k)} aria-pressed={scenario === k}
-                      className={`rounded-md px-2.5 py-1 ${scenario === k ? "bg-white/10 text-ink" : "text-muted hover:text-ink"}`}
+                      className={`rounded-md px-2.5 py-1 ${scenario === k ? "bg-hover text-ink" : "text-muted hover:text-ink"}`}
                       title={s.long}
                     >
                       {s.label}

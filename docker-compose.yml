@@ -1,6 +1,33 @@
 name: dashboard
 services:
 
+  # One public HTTPS link for backend + GeoServer, no domain needed:
+  # cloudflared (quick tunnel, *.trycloudflare.com) -> gateway (nginx) -> backend / geoserver.
+  # The URL is random and changes when the cloudflared container restarts;
+  # run ./tunnel-links.sh to print it and write it into frontend/.env.local.
+  # If you get a domain later: create a tunnel in Cloudflare Zero Trust with ONE public hostname
+  # -> http://gateway:80, then use `command: tunnel --no-autoupdate run` and
+  # `environment: [TUNNEL_TOKEN=${CLOUDFLARE_TUNNEL_TOKEN}]` here (see .env.example).
+  cloudflared:
+    image: cloudflare/cloudflared:latest
+    command: tunnel --no-autoupdate --url http://gateway:80
+    restart: unless-stopped
+    networks:
+      - dashboard_development
+    depends_on:
+      - gateway
+
+  gateway:
+    image: nginx:1.27-alpine
+    restart: unless-stopped
+    volumes:
+      - ./gateway/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    networks:
+      - dashboard_development
+    depends_on:
+      - backend
+      - geoserver
+
   # frontend:
   #   build:
   #     context: ./frontend

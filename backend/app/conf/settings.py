@@ -25,7 +25,9 @@ class Settings(BaseSettings):
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 480
 
     # Comma-separated list of allowed frontend origins
-    CORS_ORIGINS: str = "http://localhost:3000,http://127.0.0.1:3000,http://localhost:3200"
+    CORS_ORIGINS: str = "http://localhost:3000,http://127.0.0.1:3000,http://localhost:3200,https://carbon-d.vercel.app"
+    # Optional regex for extra origins, e.g. ^https://carbon-d-[a-z0-9-]+\.vercel\.app$ for Vercel previews
+    CORS_ORIGIN_REGEX: str | None = None
 
     @property
     def database_url(self) -> str:

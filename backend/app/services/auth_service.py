@@ -8,7 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.conf.settings import settings
 from app.database.crud import user as user_crud
 from app.database.models import User
-from app.schemas.auth import Token
+from app.schemas.auth import Token, UserCreate
 
 
 def hash_password(password: str) -> str:
@@ -54,3 +54,10 @@ async def user_from_token(db: AsyncSession, token: str) -> User:
             headers={"WWW-Authenticate": "Bearer"},
         )
     return user
+
+
+async def register(db: AsyncSession, data: UserCreate) -> Token:
+    if await user_crud.get_by_username(db, data.username):
+        raise HTTPException(status.HTTP_409_CONFLICT, "That username is already taken")
+    user = await user_crud.create(db, data.username, hash_password(data.password), data.full_name or None)
+    return create_access_token(user.username)

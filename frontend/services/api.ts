@@ -19,7 +19,7 @@ export class ApiError extends Error {
   }
 }
 
-/** Called on any 401 so the app can drop the session and go to /login. */
+/** Called on any 401 sent with a token, so the app can drop the expired session. */
 let onUnauthorized: () => void = () => {};
 export const setUnauthorizedHandler = (fn: () => void) => {
   onUnauthorized = fn;
@@ -32,12 +32,17 @@ async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
     headers: { ...(token ? { Authorization: `Bearer ${token}` } : {}), ...init.headers },
   });
   if (!res.ok) {
-    let detail = res.statusText;
+    let detail: unknown = res.statusText;
     try {
       detail = (await res.json()).detail ?? detail;
     } catch {}
     if (res.status === 401 && token) onUnauthorized();
-    throw new ApiError(res.status, typeof detail === "string" ? detail : JSON.stringify(detail));
+    const message = typeof detail === "string"
+      ? detail
+      : Array.isArray(detail) && detail[0]?.msg
+        ? `${(detail[0].loc as string[] | undefined)?.at(-1) ?? "Input"}: ${detail[0].msg}`
+        : JSON.stringify(detail);
+    throw new ApiError(res.status, message);
   }
   return res.json() as Promise<T>;
 }
@@ -45,6 +50,12 @@ async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
 export const api = {
   login: (username: string, password: string) =>
     request<Token>("/auth/login", { method: "POST", body: new URLSearchParams({ username, password }) }),
+  register: (username: string, password: string, full_name?: string) =>
+    request<Token>("/auth/register", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ username, password, full_name: full_name || null }),
+    }),
   me: () => request<User>("/auth/me"),
 
   villages: (params: { search?: string; has_carbon?: boolean; limit?: number } = {}) => {

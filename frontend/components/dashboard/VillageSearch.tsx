@@ -55,7 +55,7 @@ export default function VillageSearch({ onPick, placeholder = "Search 3,500+ vil
 
   return (
     <div ref={boxRef} className="relative w-full">
-      <div className="flex h-11 items-center gap-2 rounded-xl border border-white/12 bg-[#07130d]/85 px-3 backdrop-blur focus-within:border-emerald-300/60">
+      <div className="flex h-11 items-center gap-2 rounded-xl border border-input-line bg-popover px-3 backdrop-blur focus-within:border-accent">
         <Search className="h-4 w-4 text-muted" />
         <input
           value={query}
@@ -75,7 +75,7 @@ export default function VillageSearch({ onPick, placeholder = "Search 3,500+ vil
       </div>
 
       {open && (
-        <div id="village-results" role="listbox" className="absolute z-[1000] mt-2 w-full overflow-hidden rounded-xl border border-white/10 bg-[#07130d]/97 shadow-2xl backdrop-blur">
+        <div id="village-results" role="listbox" className="absolute z-[1000] mt-2 w-full overflow-hidden rounded-xl border border-line bg-popover shadow-2xl backdrop-blur">
           <p className="border-b border-line px-3 py-2 text-[11px] uppercase tracking-wide text-muted">
             {query.trim() ? `${total} match${total === 1 ? "" : "es"}` : "Villages with carbon assessment"}
           </p>
@@ -86,7 +86,7 @@ export default function VillageSearch({ onPick, placeholder = "Search 3,500+ vil
                   role="option" aria-selected={i === active}
                   onMouseEnter={() => setActive(i)}
                   onClick={() => pick(v)}
-                  className={`flex w-full items-center gap-3 px-3 py-2 text-left text-sm ${i === active ? "bg-white/[0.06]" : ""}`}
+                  className={`flex w-full items-center gap-3 px-3 py-2 text-left text-sm ${i === active ? "bg-hover" : ""}`}
                 >
                   <span className="min-w-0 flex-1">
                     <span className="block truncate text-ink">{v.name}</span>
@@ -95,7 +95,7 @@ export default function VillageSearch({ onPick, placeholder = "Search 3,500+ vil
                     </span>
                   </span>
                   {v.has_carbon_data && (
-                    <span className="flex items-center gap-1 rounded-full bg-emerald-400/12 px-2 py-0.5 text-[11px] font-medium text-emerald-300">
+                    <span className="flex items-center gap-1 rounded-full bg-accent-soft px-2 py-0.5 text-[11px] font-medium text-accent">
                       <Leaf className="h-3 w-3" /> carbon data
                     </span>
                   )}
