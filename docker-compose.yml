@@ -1,0 +1,93 @@
+name: dashboard
+services:
+
+  # frontend:
+  #   build:
+  #     context: ./frontend
+  #     dockerfile: dockerfile.frontend
+  #   image: frontend:dashboard
+  #   restart: always
+  #   networks:
+  #     - dashboard_development
+  #   environment:
+  #     # Browser-side URLs, so they use the host ports
+  #     - NEXT_PUBLIC_API_URL=http://localhost:${BACKEND_PORT:-7200}
+  #     - NEXT_PUBLIC_GEOSERVER_URL=http://localhost:${GEOSERVER_PORT:-8095}/geoserver
+  #   volumes:
+  #     - ./frontend:/app:z
+  #     - /app/node_modules
+  #     - /app/.next
+  #   command: npm run dev -- -H 0.0.0.0 -p 3000
+  #   depends_on:
+  #     - backend
+  #   ports:
+  #     - "${FRONTEND_PORT:-3200}:3000"
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    image: backend:dashboard
+    restart: always
+    networks:
+      - dashboard_development
+    env_file:
+      - ./backend/.backenddb.env
+    volumes:
+      - ./backend:/home/app:z
+    #command: sh -c "alembic upgrade head && gunicorn app.main:app --config gunicorn.conf.py"
+    # Apply database migrations, then start the API
+    command: sh -c "alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port 7200 --reload --reload-dir app"
+    depends_on:
+      database:
+        condition: service_healthy
+      geoserver:
+        condition: service_started
+    ports:
+      - "${BACKEND_PORT:-7200}:7200"
+
+  database:
+    image: postgis/postgis:16-3.4
+    shm_size: 1024mb
+    restart: always
+    networks:
+      - dashboard_development
+    ports:
+      - "${DB_PORT:-5460}:5432"
+    env_file:
+      - ./database/.db.env
+    volumes:
+      - dashboard_db:/var/lib/postgresql/data
+      - ./database/init-databases.sql:/docker-entrypoint-initdb.d/init-databases.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  geoserver:
+    image: kartoza/geoserver:3.0.0
+    restart: always
+    networks:
+      - dashboard_development
+    volumes:
+      - dashboard_geoserver_data:/opt/geoserver/data_dir
+      - dashboard_geoserver_gwc:/opt/geoserver/gwc
+    env_file:
+      - ./geoserver/.geoserver.env
+    environment:
+      - TZ=Asia/Kolkata
+    depends_on:
+      database:
+        condition: service_healthy
+    ports:
+      - "${GEOSERVER_PORT:-8095}:8080"
+
+networks:
+  dashboard_development:
+    name: dashboard_development
+
+volumes:
+  dashboard_db:
+  dashboard_geoserver_data:
+  dashboard_geoserver_gwc:

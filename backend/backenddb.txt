@@ -1,0 +1,16 @@
+POSTGRES_USER=admin
+POSTGRES_PASSWORD=admin
+POSTGRES_DB=dashboard
+POSTGRES_HOST=database
+POSTGRES_PORT=5432
+
+GEOSERVER_URL=http://geoserver:8080/geoserver
+GEOSERVER_USERNAME=admin
+GEOSERVER_PASSWORD=geoserver
+GEOSERVER_WORKSPACE=dashboard
+
+CORS_ORIGINS=http://localhost:3000,http://127.0.0.1:3000,http://localhost:3200
+
+# Auth (generate your own: python -c "import secrets;print(secrets.token_urlsafe(48))")
+JWT_SECRET_KEY=change-me
+ACCESS_TOKEN_EXPIRE_MINUTES=480

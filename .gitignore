@@ -1,0 +1,8 @@
+.env
+**/.db.env
+**/.geoserver.env
+**/.backenddb.env
+backup/
+frontend/public
+media
+

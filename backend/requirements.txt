@@ -1,0 +1,15 @@
+fastapi
+uvicorn[standard]
+gunicorn
+pydantic-settings
+sqlalchemy[asyncio]
+asyncpg
+psycopg2-binary
+geoalchemy2
+alembic
+python-multipart
+python-dotenv
+requests
+httpx
+PyJWT
+bcrypt
