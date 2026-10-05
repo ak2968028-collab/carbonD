@@ -38,7 +38,7 @@ STYLES = {
     <Rule>
       <PolygonSymbolizer>
         <Fill><CssParameter name="fill">#a7f3d0</CssParameter><CssParameter name="fill-opacity">0.04</CssParameter></Fill>
-        <Stroke><CssParameter name="stroke">#d1fae5</CssParameter><CssParameter name="stroke-width">0.7</CssParameter><CssParameter name="stroke-opacity">0.75</CssParameter></Stroke>
+        <Stroke><CssParameter name="stroke">#d1fae5</CssParameter><CssParameter name="stroke-width">0.6</CssParameter><CssParameter name="stroke-opacity">0.5</CssParameter></Stroke>
       </PolygonSymbolizer>
     </Rule>
     <Rule>
