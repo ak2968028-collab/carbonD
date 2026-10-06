@@ -17,6 +17,9 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(title=settings.PROJECT_NAME, lifespan=lifespan)
 
+# Allowed browser origins (backend/.backenddb.env):
+#   CORS_ORIGINS       exact list: localhost dev servers + https://carbon-d.vercel.app
+#   CORS_ORIGIN_REGEX  carbon-d-*.vercel.app previews + *.trycloudflare.com
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.cors_origins,

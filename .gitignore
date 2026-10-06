@@ -3,6 +3,8 @@
 **/.geoserver.env
 **/.backenddb.env
 backup/
-frontend/public
+# Large original photos stay out of git; the web-sized copies the pages use are kept
+frontend/public/*
+!frontend/public/images/
 media
 
